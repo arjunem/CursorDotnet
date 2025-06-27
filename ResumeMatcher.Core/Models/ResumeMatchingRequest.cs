@@ -28,7 +28,7 @@ namespace ResumeMatcher.Core.Models
         public string Id { get; set; } = string.Empty;
         public string FileName { get; set; } = string.Empty;
         public string FilePath { get; set; } = string.Empty;
-        // Content is excluded to avoid sending large data to client
+        // public string? Content { get; set; }
         public string? EmailSubject { get; set; }
         public string? EmailSender { get; set; }
         public string? Email { get; set; }
@@ -36,7 +36,7 @@ namespace ResumeMatcher.Core.Models
         public string Source { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
         public DateTime? ProcessedAt { get; set; }
-        public ResumeStatus Status { get; set; }
+        public ResumeStatus Status { get; set; } = ResumeStatus.Pending;
     }
     
     public class ResumeRankingSummary
@@ -45,38 +45,11 @@ namespace ResumeMatcher.Core.Models
         public double Score { get; set; }
         public int Rank { get; set; }
         public List<KeywordMatch> KeywordMatches { get; set; } = new List<KeywordMatch>();
+        // public double SkillsMatchPercentage { get; set; }
+        // public double ExperienceMatchPercentage { get; set; }
+        // public double EducationMatchPercentage { get; set; }
+        public string? Summary { get; set; }
         public string ResumeSource { get; set; } = string.Empty;
-        public string? CandidateEmail => Resume.Email;
-        public string? CandidateEmailSender => Resume.EmailSender;
-        public string? CandidateEmailSubject => Resume.EmailSubject;
-        public DateTime? CandidateEmailDate => Resume.EmailDate;
-        public string CandidateName => ExtractCandidateName();
-        
-        private string ExtractCandidateName()
-        {
-            if (!string.IsNullOrEmpty(Resume.EmailSender))
-            {
-                var sender = Resume.EmailSender;
-                if (sender.Contains("<"))
-                {
-                    sender = sender.Substring(0, sender.IndexOf("<")).Trim();
-                }
-                sender = sender.Replace("\"", "").Trim();
-                if (!string.IsNullOrEmpty(sender))
-                {
-                    return sender;
-                }
-            }
-            
-            if (!string.IsNullOrEmpty(Resume.FileName))
-            {
-                var fileName = Path.GetFileNameWithoutExtension(Resume.FileName);
-                fileName = fileName.Replace("_", " ").Replace("-", " ");
-                return fileName;
-            }
-            
-            return "Unknown Candidate";
-        }
     }
     
     public class ResumeMatchingResponse
@@ -96,9 +69,9 @@ namespace ResumeMatcher.Core.Models
         // Separate counts and candidate lists by source
         public int EmailResumesCount => Rankings.Count(r => r.ResumeSource == "Email");
         public int DatabaseResumesCount => Rankings.Count(r => r.ResumeSource == "Database");
-        public List<string> EmailCandidates => Rankings.Where(r => r.ResumeSource == "Email").Select(r => r.CandidateName).Distinct().ToList();
-        public List<string> DatabaseCandidates => Rankings.Where(r => r.ResumeSource == "Database").Select(r => r.CandidateName).Distinct().ToList();
-        public List<string> AllCandidates => Rankings.Select(r => r.CandidateName).Distinct().ToList();
+        public List<string> EmailCandidates => Rankings.Where(r => r.ResumeSource == "Email").Select(r => r.Resume.Email).Where(e => !string.IsNullOrEmpty(e)).Distinct().ToList();
+        public List<string> DatabaseCandidates => Rankings.Where(r => r.ResumeSource == "Database").Select(r => r.Resume.Email).Where(e => !string.IsNullOrEmpty(e)).Distinct().ToList();
+        public List<string> AllCandidates => Rankings.Select(r => r.Resume.Email).Where(e => !string.IsNullOrEmpty(e)).Distinct().ToList();
         // public double AverageScore => Rankings.Any() ? Rankings.Average(r => r.Score) : 0.0;
         // public double MaxScore => Rankings.Any() ? Rankings.Max(r => r.Score) : 0.0;
         // public double MinScore => Rankings.Any() ? Rankings.Min(r => r.Score) : 0.0;

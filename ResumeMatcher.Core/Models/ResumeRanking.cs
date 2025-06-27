@@ -18,14 +18,14 @@ namespace ResumeMatcher.Core.Models
         
         // public double EducationMatchPercentage { get; set; }
         
-        // public string? Summary { get; set; }
+        public string? Summary { get; set; }
         
         // Additional candidate information for easier access
         public string? CandidateEmail => Resume.Email;
         public string? CandidateEmailSender => Resume.EmailSender;
         public string? CandidateEmailSubject => Resume.EmailSubject;
         public DateTime? CandidateEmailDate => Resume.EmailDate;
-        // public string? ResumeContent => Resume.Content;
+        public string? ResumeContent => Resume.Content;
         public string CandidateName => ExtractCandidateName();
         public string ResumeSource { get; set; } = string.Empty;
         
@@ -65,10 +65,10 @@ namespace ResumeMatcher.Core.Models
     {
         public string Keyword { get; set; } = string.Empty;
         
-        // public int Count { get; set; }
+        public int Count { get; set; }
         
         public double Weight { get; set; }
         
-        // public List<string> Context { get; set; } = new List<string>();
+        public List<string> Context { get; set; } = new List<string>();
     }
 } 

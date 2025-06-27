@@ -31,6 +31,23 @@ namespace ResumeMatcher.NET
             }
         }
 
+        public string ExtractTextFromStream(Stream stream, string fileName)
+        {
+            try
+            {
+                if (fileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+                    return ExtractTextFromPdfStream(stream, fileName);
+                if (fileName.EndsWith(".docx", StringComparison.OrdinalIgnoreCase))
+                    return ExtractTextFromDocxStream(stream, fileName);
+                return string.Empty;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ResumeParser] Stream parsing failed for {fileName}: {ex.Message}");
+                return $"File: {fileName} - Content could not be extracted due to error.";
+            }
+        }
+
         public string ExtractTextFromPdf(string filePath)
         {
             try
@@ -43,6 +60,20 @@ namespace ResumeMatcher.NET
                 Console.WriteLine($"[ResumeParser] PDF parsing failed for {filePath}: {ex.Message}");
                 // Return a fallback text for PDFs that can't be parsed
                 return $"PDF file: {Path.GetFileName(filePath)} - Content could not be extracted due to parsing error.";
+            }
+        }
+
+        public string ExtractTextFromPdfStream(Stream stream, string fileName)
+        {
+            try
+            {
+                using var pdf = PdfDocument.Open(stream);
+                return string.Join("\n", pdf.GetPages().Select(p => p.Text));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ResumeParser] PDF stream parsing failed for {fileName}: {ex.Message}");
+                return $"PDF file: {fileName} - Content could not be extracted due to parsing error.";
             }
         }
 
@@ -59,6 +90,21 @@ namespace ResumeMatcher.NET
                 Console.WriteLine($"[ResumeParser] DOCX parsing failed for {filePath}: {ex.Message}");
                 // Return a fallback text for DOCX files that can't be parsed
                 return $"DOCX file: {Path.GetFileName(filePath)} - Content could not be extracted due to parsing error.";
+            }
+        }
+
+        public string ExtractTextFromDocxStream(Stream stream, string fileName)
+        {
+            try
+            {
+                using var doc = WordprocessingDocument.Open(stream, false);
+                var body = doc.MainDocumentPart.Document.Body;
+                return body.InnerText;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ResumeParser] DOCX stream parsing failed for {fileName}: {ex.Message}");
+                return $"DOCX file: {fileName} - Content could not be extracted due to parsing error.";
             }
         }
 

@@ -75,6 +75,8 @@ namespace ResumeMatcher.Services
                 var score = keywordMatches.Sum(km => km.Weight);
                 Console.WriteLine($"[RankResumeAsync] Calculated score: {score}");
 
+                var summary = GenerateSummary(extractedText, keywordMatches, score);
+
                 swTotal.Stop();
                 Console.WriteLine($"[RankResumeAsync] Total time for {resume.FileName}: {swTotal.ElapsedMilliseconds} ms");
 
@@ -83,6 +85,7 @@ namespace ResumeMatcher.Services
                     Resume = resume,
                     Score = score,
                     KeywordMatches = keywordMatches,
+                    Summary = summary,
                     ResumeSource = resume.Source ?? "Unknown"
                 };
             }
@@ -92,21 +95,56 @@ namespace ResumeMatcher.Services
             return ParseJsonSafely<ResumeRanking>(output) ?? new ResumeRanking { Resume = resume };
         }
 
+        private string GenerateSummary(string text, List<KeywordMatch> keywordMatches, double score)
+        {
+            if (string.IsNullOrEmpty(text))
+                return "No content available for summary.";
+
+            var matchedKeywords = keywordMatches.Where(km => km.Weight > 0).Select(km => km.Keyword).ToList();
+            
+            if (!matchedKeywords.Any())
+                return "No relevant skills or experience found.";
+
+            var summary = $"Candidate shows proficiency in: {string.Join(", ", matchedKeywords)}. ";
+            summary += $"Overall match score: {score:F2}.";
+
+            return summary;
+        }
+
         public async Task<List<ResumeRanking>> RankResumesAsync(List<Resume> resumes, ResumeMatchingRequest request)
         {
             var swTotal = Stopwatch.StartNew();
+            Console.WriteLine($"[RankResumesAsync] Starting to rank {resumes.Count} resumes");
+            
             if (_useDotNet)
             {
-                Console.WriteLine($"[RankResumesAsync] Ranking {resumes.Count} resumes");
+                Console.WriteLine($"[RankResumesAsync] Using .NET logic for ranking");
                 var rankings = new List<ResumeRanking>();
                 var keywords = new List<string>();
                 if (request.RequiredSkills != null) keywords.AddRange(request.RequiredSkills);
                 if (request.PreferredSkills != null) keywords.AddRange(request.PreferredSkills);
+                
+                Console.WriteLine($"[RankResumesAsync] Using {keywords.Count} keywords for matching");
+                
+                var swProcessing = Stopwatch.StartNew();
+                var processedCount = 0;
+                
                 foreach (var resume in resumes)
                 {
+                    var swResume = Stopwatch.StartNew();
                     var ranking = await RankResumeAsync(resume, request.JobDescription, keywords);
                     rankings.Add(ranking);
+                    swResume.Stop();
+                    processedCount++;
+                    
+                    if (processedCount % 5 == 0 || processedCount == resumes.Count)
+                    {
+                        Console.WriteLine($"[RankResumesAsync] Processed {processedCount}/{resumes.Count} resumes. Last resume took: {swResume.ElapsedMilliseconds} ms");
+                    }
                 }
+                swProcessing.Stop();
+                Console.WriteLine($"[RankResumesAsync] Processing all resumes took: {swProcessing.ElapsedMilliseconds} ms");
+                
                 var swSort = Stopwatch.StartNew();
                 var sortedRankings = rankings
                     .OrderByDescending(r => r.Score)
@@ -114,15 +152,18 @@ namespace ResumeMatcher.Services
                     .ToList();
                 swSort.Stop();
                 Console.WriteLine($"[RankResumesAsync] Sorting took: {swSort.ElapsedMilliseconds} ms");
+                
                 for (int i = 0; i < sortedRankings.Count; i++)
                 {
                     sortedRankings[i].Rank = i + 1;
                 }
+                
                 swTotal.Stop();
                 Console.WriteLine($"[RankResumesAsync] Total time for ranking all resumes: {swTotal.ElapsedMilliseconds} ms");
                 return sortedRankings;
             }
             
+            Console.WriteLine($"[RankResumesAsync] Using Python logic for ranking");
             var args = $"resume_parser.py rank_resumes '{JsonSerializer.Serialize(resumes)}' \"{request.JobDescription.Replace("\"", "'")}\"";
             var output = await RunPythonScriptAsync(args);
             var pythonRankings = ParseJsonSafely<List<ResumeRanking>>(output) ?? new List<ResumeRanking>();

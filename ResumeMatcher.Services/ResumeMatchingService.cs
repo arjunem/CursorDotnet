@@ -27,7 +27,7 @@ namespace ResumeMatcher.Services
                     Id = r.Resume.Id,
                     FileName = r.Resume.FileName,
                     FilePath = r.Resume.FilePath,
-                    // Content is excluded
+                    // Content = r.Resume.Content,
                     EmailSubject = r.Resume.EmailSubject,
                     EmailSender = r.Resume.EmailSender,
                     Email = r.Resume.Email,
@@ -40,6 +40,7 @@ namespace ResumeMatcher.Services
                 Score = r.Score,
                 Rank = r.Rank,
                 KeywordMatches = r.KeywordMatches,
+                Summary = r.Summary,
                 ResumeSource = r.ResumeSource
             }).ToList();
             

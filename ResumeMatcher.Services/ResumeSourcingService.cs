@@ -14,10 +14,12 @@ namespace ResumeMatcher.Services
         private readonly bool _useDotNet;
         private readonly DatabaseResumeSource _dbSource;
         private readonly EmailResumeSource _emailSource;
+        private readonly IConfiguration _configuration;
 
         public ResumeSourcingService(bool useDotNet, IConfiguration configuration)
         {
             _useDotNet = useDotNet;
+            _configuration = configuration;
             Console.WriteLine($"[ResumeSourcingService] Constructor called with useDotNet: {useDotNet}");
             var currentDir = Directory.GetCurrentDirectory();
             var solutionRoot = Path.GetFullPath(Path.Combine(currentDir, ".."));
@@ -44,10 +46,10 @@ namespace ResumeMatcher.Services
             Console.WriteLine($"[ResumeSourcingService] Scripts directory exists: {Directory.Exists(_scriptsDir)}");
         }
 
-        public async Task<List<Resume>> GetResumesFromEmailAsync(string subjectFilter = "resume", List<string> attachmentExtensions = null)
+        public async Task<List<Resume>> GetResumesFromEmailAsync(string subjectFilter = "resume", List<string> attachmentExtensions = null, int maxEmails = 50)
         {
             if (_useDotNet)
-                return await _emailSource.FetchResumesFromEmailAsync(subjectFilter, attachmentExtensions);
+                return await _emailSource.FetchResumesFromEmailAsync(subjectFilter, attachmentExtensions, maxEmails);
             var args = $"email_source.py";
             var output = await RunPythonScriptAsync(args);
             return ParseResumesFromJson(output);
@@ -65,10 +67,41 @@ namespace ResumeMatcher.Services
         public async Task<List<Resume>> GetAllResumesAsync(ResumeMatchingRequest request)
         {
             var resumes = new List<Resume>();
+            
             if (request.IncludeEmailResumes)
-                resumes.AddRange(await GetResumesFromEmailAsync());
+            {
+                try
+                {
+                    Console.WriteLine("[ResumeSourcingService] Attempting to fetch resumes from email...");
+                    var maxEmails = _configuration.GetSection("Email").GetValue<int>("MaxEmails", 50);
+                    Console.WriteLine($"[ResumeSourcingService] Using max emails limit: {maxEmails}");
+                    var emailResumes = await GetResumesFromEmailAsync(maxEmails: maxEmails);
+                    resumes.AddRange(emailResumes);
+                    Console.WriteLine($"[ResumeSourcingService] Successfully fetched {emailResumes.Count} resumes from email");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[ResumeSourcingService] Email fetch failed: {ex.Message}. Continuing with database resumes only.");
+                    // Continue with database resumes only
+                }
+            }
+            
             if (request.IncludeDatabaseResumes)
-                resumes.AddRange(await GetResumesFromDatabaseAsync());
+            {
+                try
+                {
+                    Console.WriteLine("[ResumeSourcingService] Fetching resumes from database...");
+                    var dbResumes = await GetResumesFromDatabaseAsync();
+                    resumes.AddRange(dbResumes);
+                    Console.WriteLine($"[ResumeSourcingService] Successfully fetched {dbResumes.Count} resumes from database");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[ResumeSourcingService] Database fetch failed: {ex.Message}");
+                }
+            }
+            
+            Console.WriteLine($"[ResumeSourcingService] Total resumes fetched: {resumes.Count}");
             return resumes;
         }
 
