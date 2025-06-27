@@ -1,0 +1,28 @@
+{
+  "jobDescription": "Senior Software Engineer with 5+ years of experience in .NET, C#, and web development. Must have experience with ASP.NET Core, SQL Server, and cloud technologies. The ideal candidate should be proficient in modern web frameworks and have experience with microservices architecture.",
+  "jobTitle": "Senior Software Engineer",
+  "company": "TechCorp Solutions",
+  "requiredSkills": [
+    ".NET",
+    "C#",
+    "ASP.NET Core",
+    "SQL Server",
+    "Azure",
+    "JavaScript",
+    "React",
+    "Git"
+  ],
+  "preferredSkills": [
+    "Docker",
+    "Kubernetes",
+    "Microservices",
+    "REST APIs",
+    "TypeScript",
+    "Angular",
+    "AWS",
+    "CI/CD"
+  ],
+  "maxResults": 10,
+  "includeEmailResumes": true,
+  "includeDatabaseResumes": true
+} 
