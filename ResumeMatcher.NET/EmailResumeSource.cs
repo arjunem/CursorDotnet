@@ -50,6 +50,15 @@ namespace ResumeMatcher.NET
             return match.Success ? match.Value : null;
         }
 
+        // Helper function to extract phone number from content
+        private string ExtractPhoneFromContent(string content)
+        {
+            if (string.IsNullOrEmpty(content))
+                return null;
+            
+            return _resumeParser.ExtractPhoneNumber(content);
+        }
+
         public async Task<List<Resume>> FetchResumesFromEmailAsync(string subjectFilter = "resume", List<string> attachmentExtensions = null, int maxEmails = 50)
         {
             var cacheKey = $"email_{subjectFilter}_{DateTime.UtcNow:yyyyMMdd_HH}";
@@ -155,6 +164,9 @@ namespace ResumeMatcher.NET
                                         extractedEmail = ExtractEmailFromSender(message.From.ToString());
                                     }
                                     
+                                    // Extract phone number from the resume content
+                                    var extractedPhone = ExtractPhoneFromContent(resumeContent);
+                                    
                                     resumes.Add(new Resume
                                     {
                                         Id = Guid.NewGuid().ToString(),
@@ -164,6 +176,7 @@ namespace ResumeMatcher.NET
                                         EmailSubject = message.Subject,
                                         EmailSender = message.From.ToString(),
                                         Email = extractedEmail, // Email from resume content or sender
+                                        Phone = extractedPhone, // Phone number from resume content
                                         EmailDate = message.Date.DateTime,
                                         Source = "Email",
                                         CreatedAt = DateTime.UtcNow,

@@ -23,7 +23,7 @@ public class DatabaseResumeSource
 
         using var conn = new SQLiteConnection($"Data Source={_dbPath};Version=3;");
         await conn.OpenAsync();
-        using var cmd = new SQLiteCommand(@"SELECT id, fileName, filePath, content, emailSubject, emailSender, email, source, createdAt, processedAt, status FROM resumes ORDER BY createdAt DESC", conn);
+        using var cmd = new SQLiteCommand(@"SELECT id, fileName, filePath, content, emailSubject, emailSender, email, phone, emailDate, source, createdAt, processedAt, status FROM resumes ORDER BY createdAt DESC", conn);
         using var reader = await cmd.ExecuteReaderAsync();
         while (await reader.ReadAsync())
         {
@@ -36,6 +36,8 @@ public class DatabaseResumeSource
                 EmailSubject = reader["emailSubject"]?.ToString(),
                 EmailSender = reader["emailSender"]?.ToString(),
                 Email = reader["email"]?.ToString(),
+                Phone = reader["phone"]?.ToString(),
+                EmailDate = DateTime.TryParse(reader["emailDate"]?.ToString(), out var emailDate) ? emailDate : (DateTime?)null,
                 Source = reader["source"]?.ToString() ?? "Database",
                 CreatedAt = DateTime.TryParse(reader["createdAt"].ToString(), out var created) ? created : DateTime.UtcNow,
                 ProcessedAt = DateTime.TryParse(reader["processedAt"]?.ToString(), out var processed) ? processed : (DateTime?)null,

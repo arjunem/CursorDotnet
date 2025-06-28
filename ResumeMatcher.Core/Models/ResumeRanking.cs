@@ -22,6 +22,7 @@ namespace ResumeMatcher.Core.Models
         
         // Additional candidate information for easier access
         public string? CandidateEmail => Resume.Email;
+        public string? CandidatePhone => Resume.Phone; // Phone number from resume
         public string? CandidateEmailSender => Resume.EmailSender;
         public string? CandidateEmailSubject => Resume.EmailSubject;
         public DateTime? CandidateEmailDate => Resume.EmailDate;

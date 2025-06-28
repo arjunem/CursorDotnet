@@ -2,7 +2,6 @@
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
 EXPOSE 80
-EXPOSE 443
 
 # Use the official .NET 8.0 SDK as the build image
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
@@ -51,9 +50,9 @@ COPY --from=build /src/PythonScripts/ /app/PythonScripts/
 
 # Set environment variables
 ENV ASPNETCORE_URLS=http://+:80
-ENV ASPNETCORE_ENVIRONMENT=Production
+ENV ASPNETCORE_ENVIRONMENT=Development
 
-# Expose port 80
+# Expose port for HTTP
 EXPOSE 80
 
 # Set the entry point

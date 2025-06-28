@@ -7,9 +7,9 @@ services:
       dockerfile: Dockerfile
     container_name: resume-matcher-api
     ports:
-      - "8080:80"
+      - "8080:80"   # HTTP
     environment:
-      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
     volumes:
       # Mount the database file for persistence

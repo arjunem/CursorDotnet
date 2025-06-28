@@ -183,6 +183,41 @@ namespace ResumeMatcher.NET
         //     return (double)found / requiredSkills.Count * 100.0;
         // }
 
+        public string? ExtractPhoneNumber(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return null;
+
+            // Common phone number patterns including Indian numbers
+            var patterns = new[]
+            {
+                // Indian mobile numbers: +91 98765 43210, +91-98765-43210, 98765 43210, 9876543210
+                @"(?:\+91[\s-]?)?[6-9]\d{9}",
+                // Indian landline: +91 11 2345 6789, 011-2345-6789, 011 2345 6789
+                @"(?:\+91[\s-]?)?(?:0)?[1-9]\d{1,4}[\s-]?\d{3,4}[\s-]?\d{4}",
+                // US patterns: (555) 123-4567, 555-123-4567, 555.123.4567
+                @"\(\d{3}\)\s*\d{3}-\d{4}",
+                @"\d{3}-\d{3}-\d{4}",
+                @"\d{3}\.\d{3}\.\d{4}",
+                @"\d{3}\s\d{3}\s\d{4}",
+                @"\b\d{10}\b",
+                // International: +1 555 123 4567
+                @"\+\d{1,3}\s*\d{3}\s*\d{3}\s*\d{4}",
+                @"1-\d{3}-\d{3}-\d{4}"
+            };
+
+            foreach (var pattern in patterns)
+            {
+                var match = Regex.Match(text, pattern);
+                if (match.Success)
+                {
+                    return match.Value.Trim();
+                }
+            }
+
+            return null;
+        }
+
         // Add more methods as needed for experience, education, and ranking
 
         private static readonly HashSet<string> StopWords = new HashSet<string>(new[]

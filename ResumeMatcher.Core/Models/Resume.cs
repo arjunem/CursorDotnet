@@ -21,6 +21,8 @@ namespace ResumeMatcher.Core.Models
         
         public string? Email { get; set; } // Extracted email from resume content
         
+        public string? Phone { get; set; } // Extracted phone number from resume content
+        
         public DateTime? EmailDate { get; set; }
         
         public string Source { get; set; } = string.Empty; // "Email" or "Database"

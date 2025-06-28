@@ -33,6 +33,7 @@ class Program
                 emailSubject TEXT,
                 emailSender TEXT,
                 email TEXT,
+                phone TEXT,
                 emailDate TEXT,
                 source TEXT NOT NULL,
                 createdAt TEXT NOT NULL,
@@ -56,6 +57,42 @@ class Program
             return match.Success ? match.Value : null;
         }
 
+        // Helper function to extract phone number from content
+        string ExtractPhoneFromContent(string content)
+        {
+            if (string.IsNullOrEmpty(content))
+                return null;
+            
+            // Common phone number patterns including Indian numbers
+            var patterns = new[]
+            {
+                // Indian mobile numbers: +91 98765 43210, +91-98765-43210, 98765 43210, 9876543210
+                @"(?:\+91[\s-]?)?[6-9]\d{9}",
+                // Indian landline: +91 11 2345 6789, 011-2345-6789, 011 2345 6789
+                @"(?:\+91[\s-]?)?(?:0)?[1-9]\d{1,4}[\s-]?\d{3,4}[\s-]?\d{4}",
+                // US patterns: (555) 123-4567, 555-123-4567, 555.123.4567
+                @"\(\d{3}\)\s*\d{3}-\d{4}",
+                @"\d{3}-\d{3}-\d{4}",
+                @"\d{3}\.\d{3}\.\d{4}",
+                @"\d{3}\s\d{3}\s\d{4}",
+                @"\b\d{10}\b",
+                // International: +1 555 123 4567
+                @"\+\d{1,3}\s*\d{3}\s*\d{3}\s*\d{4}",
+                @"1-\d{3}-\d{3}-\d{4}"
+            };
+
+            foreach (var pattern in patterns)
+            {
+                var match = Regex.Match(content, pattern);
+                if (match.Success)
+                {
+                    return match.Value.Trim();
+                }
+            }
+
+            return null;
+        }
+
         // Sample resumes with email information
         var sampleResumes = new[]
         {
@@ -77,163 +114,171 @@ Experience: Full-stack development, API design, database optimization",
             },
             new {
                 Id = Guid.NewGuid().ToString(),
-                FileName = "jane_smith_resume.docx",
-                FilePath = "/sample/resumes/jane_smith_resume.docx",
-                Content = @"Jane Smith
+                FileName = "priya_sharma_resume.docx",
+                FilePath = "/sample/resumes/priya_sharma_resume.docx",
+                Content = @"Priya Sharma
 Senior Developer
-Contact: jane.smith@techcorp.com
-LinkedIn: linkedin.com/in/janesmith
+Contact: priya.sharma@techcorp.in
+Phone: +91 98765 43210
+LinkedIn: linkedin.com/in/priyasharma
 8 years experience in Python, Django, PostgreSQL
 Skills: Python, Django, PostgreSQL, Docker, AWS, Kubernetes
 Experience: Backend development, DevOps, cloud architecture",
                 EmailSubject = "Resume - Senior Developer Role",
-                EmailSender = "\"Jane Smith\" <jane.smith@techcorp.com>",
+                EmailSender = "\"Priya Sharma\" <priya.sharma@techcorp.in>",
                 EmailDate = DateTime.Now.AddDays(-3),
                 Source = "Database"
             },
             new {
                 Id = Guid.NewGuid().ToString(),
-                FileName = "mike_johnson_resume.pdf",
-                FilePath = "/sample/resumes/mike_johnson_resume.pdf",
-                Content = @"Mike Johnson
+                FileName = "raj_patel_resume.pdf",
+                FilePath = "/sample/resumes/raj_patel_resume.pdf",
+                Content = @"Raj Patel
 Full Stack Developer
-Email: mike.johnson@startup.io
-Website: mikejohnson.dev
+Email: raj.patel@startup.in
+Phone: 9876543210
+Website: rajpatel.dev
 6 years experience in Java, Spring, MySQL
 Skills: Java, Spring, MySQL, Angular, Git, Jenkins
 Experience: Enterprise applications, CI/CD pipelines",
                 EmailSubject = "Fwd: Resume - Full Stack Developer",
-                EmailSender = "\"Mike Johnson\" <mike.johnson@startup.io>",
+                EmailSender = "\"Raj Patel\" <raj.patel@startup.in>",
                 EmailDate = DateTime.Now.AddDays(-2),
                 Source = "Database"
             },
             new {
                 Id = Guid.NewGuid().ToString(),
-                FileName = "sarah_wilson_resume.pdf",
-                FilePath = "/sample/resumes/sarah_wilson_resume.pdf",
-                Content = @"Sarah Wilson
+                FileName = "anita_verma_resume.pdf",
+                FilePath = "/sample/resumes/anita_verma_resume.pdf",
+                Content = @"Anita Verma
 Software Engineer
 Contact Information:
-Email: sarah.wilson@innovate.com
-Phone: (555) 987-6543
+Email: anita.verma@innovate.in
+Phone: +91-98765-43210
 4 years experience in .NET, C#, Azure
 Skills: C#, ASP.NET Core, Azure, SQL Server, TypeScript, React
 Experience: Web development, cloud services, agile methodologies",
                 EmailSubject = "Application - Software Engineer Position",
-                EmailSender = "\"Sarah Wilson\" <sarah.wilson@innovate.com>",
+                EmailSender = "\"Anita Verma\" <anita.verma@innovate.in>",
                 EmailDate = DateTime.Now.AddDays(-1),
                 Source = "Database"
             },
             new {
                 Id = Guid.NewGuid().ToString(),
-                FileName = "david_brown_resume.docx",
-                FilePath = "/sample/resumes/david_brown_resume.docx",
-                Content = @"David Brown
+                FileName = "vikram_singh_resume.docx",
+                FilePath = "/sample/resumes/vikram_singh_resume.docx",
+                Content = @"Vikram Singh
 Senior .NET Developer
-Email: david.brown@enterprise.com
-GitHub: github.com/davidbrown
+Email: vikram.singh@enterprise.in
+Phone: 011-2345-6789
+GitHub: github.com/vikramsingh
 7 years experience in .NET, C#, SQL Server
 Skills: .NET, C#, SQL Server, Entity Framework, WPF, Xamarin
 Experience: Desktop applications, mobile development, database design",
                 EmailSubject = "Resume - Senior .NET Developer",
-                EmailSender = "\"David Brown\" <david.brown@enterprise.com>",
+                EmailSender = "\"Vikram Singh\" <vikram.singh@enterprise.in>",
                 EmailDate = DateTime.Now.AddDays(-4),
                 Source = "Database"
             },
             new {
                 Id = Guid.NewGuid().ToString(),
-                FileName = "emma_davis_resume.pdf",
-                FilePath = "/sample/resumes/emma_davis_resume.pdf",
-                Content = @"Emma Davis
+                FileName = "meera_kumar_resume.pdf",
+                FilePath = "/sample/resumes/meera_kumar_resume.pdf",
+                Content = @"Meera Kumar
 Full Stack .NET Developer
-Contact: emma.davis@webtech.com
-Portfolio: emmadavis.dev
+Contact: meera.kumar@webtech.in
+Phone: +91 98765 43210
+Portfolio: meerakumar.dev
 5 years experience in .NET, C#, JavaScript
 Skills: .NET, C#, JavaScript, React, SQL Server, Azure DevOps
 Experience: Web applications, API development, team leadership",
                 EmailSubject = "Application for Full Stack Developer Role",
-                EmailSender = "\"Emma Davis\" <emma.davis@webtech.com>",
+                EmailSender = "\"Meera Kumar\" <meera.kumar@webtech.in>",
                 EmailDate = DateTime.Now.AddDays(-6),
                 Source = "Database"
             },
             new {
                 Id = Guid.NewGuid().ToString(),
-                FileName = "alex_chen_resume.pdf",
-                FilePath = "/sample/resumes/alex_chen_resume.pdf",
-                Content = @"Alex Chen
+                FileName = "arjun_reddy_resume.pdf",
+                FilePath = "/sample/resumes/arjun_reddy_resume.pdf",
+                Content = @"Arjun Reddy
 Software Engineer
-Email: alex.chen@modernapps.com
-LinkedIn: linkedin.com/in/alexchen
+Email: arjun.reddy@modernapps.in
+Phone: 9876543210
+LinkedIn: linkedin.com/in/arjunreddy
 3 years experience in C#, .NET, Azure
 Skills: C#, .NET, Azure, SQL Server, JavaScript, Vue.js
 Experience: Modern web development, cloud integration, testing",
                 EmailSubject = "Resume - Software Engineer Application",
-                EmailSender = "\"Alex Chen\" <alex.chen@modernapps.com>",
+                EmailSender = "\"Arjun Reddy\" <arjun.reddy@modernapps.in>",
                 EmailDate = DateTime.Now.AddDays(-7),
                 Source = "Database"
             },
             new {
                 Id = Guid.NewGuid().ToString(),
-                FileName = "lisa_garcia_resume.docx",
-                FilePath = "/sample/resumes/lisa_garcia_resume.docx",
-                Content = @"Lisa Garcia
+                FileName = "neha_gupta_resume.docx",
+                FilePath = "/sample/resumes/neha_gupta_resume.docx",
+                Content = @"Neha Gupta
 Senior Backend Developer
 Contact Information:
-Email: lisa.garcia@backend.com
-Phone: (555) 456-7890
+Email: neha.gupta@backend.in
+Phone: +91-98765-43210
 6 years experience in .NET, C#, SQL Server
 Skills: .NET, C#, SQL Server, Entity Framework, Azure, Docker
 Experience: Microservices, database optimization, performance tuning",
                 EmailSubject = "Application - Senior Backend Developer",
-                EmailSender = "\"Lisa Garcia\" <lisa.garcia@backend.com>",
+                EmailSender = "\"Neha Gupta\" <neha.gupta@backend.in>",
                 EmailDate = DateTime.Now.AddDays(-8),
                 Source = "Database"
             },
             new {
                 Id = Guid.NewGuid().ToString(),
-                FileName = "robert_taylor_resume.pdf",
-                FilePath = "/sample/resumes/robert_taylor_resume.pdf",
-                Content = @"Robert Taylor
+                FileName = "rohit_kumar_resume.pdf",
+                FilePath = "/sample/resumes/rohit_kumar_resume.pdf",
+                Content = @"Rohit Kumar
 .NET Developer
-Email: robert.taylor@legacy.com
-Website: roberttaylor.net
+Email: rohit.kumar@legacy.in
+Phone: 011 2345 6789
+Website: rohitkumar.net
 4 years experience in C#, ASP.NET, SQL Server
 Skills: C#, ASP.NET, SQL Server, JavaScript, jQuery, Bootstrap
 Experience: Web development, legacy system maintenance, user support",
                 EmailSubject = "Resume - .NET Developer Position",
-                EmailSender = "\"Robert Taylor\" <robert.taylor@legacy.com>",
+                EmailSender = "\"Rohit Kumar\" <rohit.kumar@legacy.in>",
                 EmailDate = DateTime.Now.AddDays(-9),
                 Source = "Database"
             },
             new {
                 Id = Guid.NewGuid().ToString(),
-                FileName = "maria_rodriguez_resume.pdf",
-                FilePath = "/sample/resumes/maria_rodriguez_resume.pdf",
-                Content = @"Maria Rodriguez
+                FileName = "divya_sharma_resume.pdf",
+                FilePath = "/sample/resumes/divya_sharma_resume.pdf",
+                Content = @"Divya Sharma
 Full Stack .NET Developer
-Contact: maria.rodriguez@fullstack.com
-GitHub: github.com/mariarodriguez
+Contact: divya.sharma@fullstack.in
+Phone: 9876543210
+GitHub: github.com/divyasharma
 5 years experience in .NET, C#, React
 Skills: .NET, C#, React, TypeScript, SQL Server, Azure
 Experience: Modern web applications, responsive design, API development",
                 EmailSubject = "Application for Full Stack .NET Developer",
-                EmailSender = "\"Maria Rodriguez\" <maria.rodriguez@fullstack.com>",
+                EmailSender = "\"Divya Sharma\" <divya.sharma@fullstack.in>",
                 EmailDate = DateTime.Now.AddDays(-10),
                 Source = "Database"
             },
             new {
                 Id = Guid.NewGuid().ToString(),
-                FileName = "james_anderson_resume.docx",
-                FilePath = "/sample/resumes/james_anderson_resume.docx",
-                Content = @"James Anderson
+                FileName = "amit_kumar_resume.docx",
+                FilePath = "/sample/resumes/amit_kumar_resume.docx",
+                Content = @"Amit Kumar
 Senior Software Engineer
-Email: james.anderson@senior.com
-LinkedIn: linkedin.com/in/jamesanderson
+Email: amit.kumar@senior.in
+Phone: +91 98765 43210
+LinkedIn: linkedin.com/in/amitkumar
 8 years experience in .NET, C#, Azure
 Skills: .NET, C#, Azure, SQL Server, Docker, Kubernetes, CI/CD
 Experience: Cloud architecture, DevOps, team mentoring, project management",
                 EmailSubject = "Resume - Senior Software Engineer Role",
-                EmailSender = "\"James Anderson\" <james.anderson@senior.com>",
+                EmailSender = "\"Amit Kumar\" <amit.kumar@senior.in>",
                 EmailDate = DateTime.Now.AddDays(-11),
                 Source = "Database"
             },
@@ -258,14 +303,17 @@ Experience: Web development, database design, frontend integration",
 
         // Insert sample resumes
         string insertSql = @"
-            INSERT INTO resumes (id, fileName, filePath, content, emailSubject, emailSender, email, emailDate, source, createdAt, processedAt, status)
-            VALUES (@id, @fileName, @filePath, @content, @emailSubject, @emailSender, @email, @emailDate, @source, @createdAt, @processedAt, @status)";
+            INSERT INTO resumes (id, fileName, filePath, content, emailSubject, emailSender, email, phone, emailDate, source, createdAt, processedAt, status)
+            VALUES (@id, @fileName, @filePath, @content, @emailSubject, @emailSender, @email, @phone, @emailDate, @source, @createdAt, @processedAt, @status)";
 
         int count = 0;
         foreach (var resume in sampleResumes)
         {
             // Extract email from content
             var extractedEmail = ExtractEmailFromContent(resume.Content);
+            
+            // Extract phone number from content
+            var extractedPhone = ExtractPhoneFromContent(resume.Content);
             
             using var insertCommand = new SQLiteCommand(insertSql, connection);
             insertCommand.Parameters.AddWithValue("@id", resume.Id);
@@ -275,6 +323,7 @@ Experience: Web development, database design, frontend integration",
             insertCommand.Parameters.AddWithValue("@emailSubject", resume.EmailSubject);
             insertCommand.Parameters.AddWithValue("@emailSender", resume.EmailSender);
             insertCommand.Parameters.AddWithValue("@email", extractedEmail ?? (object)DBNull.Value);
+            insertCommand.Parameters.AddWithValue("@phone", extractedPhone ?? (object)DBNull.Value);
             insertCommand.Parameters.AddWithValue("@emailDate", resume.EmailDate.ToString("yyyy-MM-dd HH:mm:ss"));
             insertCommand.Parameters.AddWithValue("@source", resume.Source);
             insertCommand.Parameters.AddWithValue("@createdAt", DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"));
@@ -283,7 +332,7 @@ Experience: Web development, database design, frontend integration",
 
             insertCommand.ExecuteNonQuery();
             count++;
-            Console.WriteLine($"Inserted resume {count}: {resume.FileName} (Email: {extractedEmail ?? "Not found"})");
+            Console.WriteLine($"Inserted resume {count}: {resume.FileName} (Email: {extractedEmail ?? "Not found"}, Phone: {extractedPhone ?? "Not found"})");
         }
 
         // Verify the data
@@ -293,12 +342,13 @@ Experience: Web development, database design, frontend integration",
 
         // Show sample data with extracted emails
         Console.WriteLine("\nSample data with extracted emails:");
-        using var selectCommand = new SQLiteCommand("SELECT id, fileName, emailSender, email, source FROM resumes LIMIT 5", connection);
+        using var selectCommand = new SQLiteCommand("SELECT id, fileName, emailSender, email, phone, source FROM resumes LIMIT 5", connection);
         using var reader = selectCommand.ExecuteReader();
         while (reader.Read())
         {
             var extractedEmail = reader["email"]?.ToString() ?? "Not found";
-            Console.WriteLine($"ID: {reader["id"]}, File: {reader["fileName"]}, Sender: {reader["emailSender"]}, Extracted Email: {extractedEmail}, Source: {reader["source"]}");
+            var extractedPhone = reader["phone"]?.ToString() ?? "Not found";
+            Console.WriteLine($"ID: {reader["id"]}, File: {reader["fileName"]}, Sender: {reader["emailSender"]}, Extracted Email: {extractedEmail}, Extracted Phone: {extractedPhone}, Source: {reader["source"]}");
         }
 
         connection.Close();

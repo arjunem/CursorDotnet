@@ -30,10 +30,11 @@ namespace ResumeMatcher.Core.Models
         public string Id { get; set; } = string.Empty;
         public string FileName { get; set; } = string.Empty;
         public string FilePath { get; set; } = string.Empty;
-        // public string? Content { get; set; }
+        public string? Content { get; set; }
         public string? EmailSubject { get; set; }
         public string? EmailSender { get; set; }
         public string? Email { get; set; }
+        public string? Phone { get; set; }
         public DateTime? EmailDate { get; set; }
         public string Source { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
