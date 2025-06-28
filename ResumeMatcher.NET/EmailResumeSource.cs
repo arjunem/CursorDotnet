@@ -175,6 +175,24 @@ namespace ResumeMatcher.NET
                                     // Extract phone number from the resume content
                                     var extractedPhone = ExtractPhoneFromContent(resumeContent);
                                     
+                                    // Extract name from the resume content
+                                    var extractedName = _resumeParser.ExtractName(resumeContent);
+                                    
+                                    // If no name found in resume content, try to extract from email subject
+                                    if (string.IsNullOrEmpty(extractedName))
+                                    {
+                                        extractedName = ExtractNameFromSubject(message.Subject);
+                                        if (!string.IsNullOrEmpty(extractedName))
+                                        {
+                                            Console.WriteLine($"[EmailResumeSource] Extracted name from subject: {extractedName}");
+                                        }
+                                    }
+                                    
+                                    Console.WriteLine($"[EmailResumeSource] Extracted data for {fileName}:");
+                                    Console.WriteLine($"[EmailResumeSource]   - Email: {extractedEmail ?? "Not found"}");
+                                    Console.WriteLine($"[EmailResumeSource]   - Phone: {extractedPhone ?? "Not found"}");
+                                    Console.WriteLine($"[EmailResumeSource]   - Name: {extractedName ?? "Not found"}");
+                                    
                                     resumes.Add(new Resume
                                     {
                                         Id = Guid.NewGuid().ToString(),
@@ -185,6 +203,7 @@ namespace ResumeMatcher.NET
                                         EmailSender = message.From.ToString(),
                                         Email = extractedEmail, // Email from resume content or sender
                                         Phone = extractedPhone, // Phone number from resume content
+                                        Name = extractedName, // Name from resume content
                                         EmailDate = message.Date.DateTime,
                                         Source = "Email",
                                         CreatedAt = DateTime.UtcNow,
@@ -320,6 +339,36 @@ namespace ResumeMatcher.NET
             var emailOnlyPattern = @"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b";
             var emailMatch = Regex.Match(sender, emailOnlyPattern);
             return emailMatch.Success ? emailMatch.Value : null;
+        }
+
+        // Helper function to extract name from email subject
+        private string ExtractNameFromSubject(string subject)
+        {
+            if (string.IsNullOrEmpty(subject))
+                return null;
+            
+            Console.WriteLine($"[EmailResumeSource] Attempting to extract name from subject: '{subject}'");
+            
+            // Extract name from subject after the last dash
+            var parts = subject.Split(new[] { '-' }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length > 1)
+            {
+                var namePart = parts.Last().Trim();
+                Console.WriteLine($"[EmailResumeSource] Found name part after last dash: '{namePart}'");
+                
+                // Clean up the name part - remove common prefixes/suffixes
+                namePart = namePart.Replace("Resume", "").Replace("CV", "").Replace("Application", "").Trim();
+                
+                // Check if it looks like a name (contains letters and spaces)
+                if (!string.IsNullOrEmpty(namePart) && Regex.IsMatch(namePart, @"^[A-Za-z\s]+$"))
+                {
+                    Console.WriteLine($"[EmailResumeSource] Extracted name from subject: '{namePart}'");
+                    return namePart;
+                }
+            }
+            
+            Console.WriteLine($"[EmailResumeSource] Could not extract name from subject");
+            return null;
         }
     }
 } 

@@ -6,6 +6,6 @@ namespace ResumeMatcher.Core.Interfaces
     {
         Task<ResumeMatchingResponse> MatchResumesAsync(ResumeMatchingRequest request);
         Task<List<Resume>> GetAvailableResumesAsync();
-        Task<ResumeRanking> GetResumeRankingAsync(string resumeId, string jobDescription);
+        Task<ResumeRanking> GetResumeRankingAsync(string resumeId, string jobDescription, bool useOllama = false);
     }
 } 

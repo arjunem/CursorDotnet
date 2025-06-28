@@ -2,6 +2,7 @@ using System;
 using System.Data.SQLite;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Linq;
 
 class Program
 {
@@ -34,6 +35,7 @@ class Program
                 emailSender TEXT,
                 email TEXT,
                 phone TEXT,
+                name TEXT,
                 emailDate TEXT,
                 source TEXT NOT NULL,
                 createdAt TEXT NOT NULL,
@@ -87,6 +89,62 @@ class Program
                 if (match.Success)
                 {
                     return match.Value.Trim();
+                }
+            }
+
+            return null;
+        }
+
+        // Helper function to extract name from content
+        string ExtractNameFromContent(string content)
+        {
+            if (string.IsNullOrEmpty(content))
+                return null;
+
+            // Split text into lines and look for name patterns
+            var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            
+            foreach (var line in lines.Take(10)) // Check first 10 lines
+            {
+                var trimmedLine = line.Trim();
+                if (string.IsNullOrEmpty(trimmedLine)) continue;
+
+                // Pattern 1: Full name at the beginning of resume (usually first line)
+                // Matches: "John Doe", "John A. Doe", "John A Doe", "JOHN DOE"
+                var namePattern = @"^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)$";
+                var match = Regex.Match(trimmedLine, namePattern);
+                if (match.Success)
+                {
+                    var name = match.Groups[1].Value.Trim();
+                    if (name.Split(' ').Length >= 2 && name.Split(' ').Length <= 4)
+                    {
+                        return name;
+                    }
+                }
+
+                // Pattern 2: Name with title (Mr., Ms., Dr., etc.)
+                var nameWithTitlePattern = @"^(Mr\.|Ms\.|Mrs\.|Dr\.|Prof\.)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)$";
+                match = Regex.Match(trimmedLine, nameWithTitlePattern, RegexOptions.IgnoreCase);
+                if (match.Success)
+                {
+                    var name = match.Groups[2].Value.Trim();
+                    if (name.Split(' ').Length >= 2 && name.Split(' ').Length <= 4)
+                    {
+                        return name;
+                    }
+                }
+
+                // Pattern 3: Name in ALL CAPS (common in resumes)
+                var allCapsPattern = @"^([A-Z]+(?:\s+[A-Z]+)*)$";
+                match = Regex.Match(trimmedLine, allCapsPattern);
+                if (match.Success)
+                {
+                    var name = match.Groups[1].Value.Trim();
+                    if (name.Split(' ').Length >= 2 && name.Split(' ').Length <= 4)
+                    {
+                        // Convert to proper case
+                        return System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(name.ToLower());
+                    }
                 }
             }
 
@@ -303,8 +361,8 @@ Experience: Web development, database design, frontend integration",
 
         // Insert sample resumes
         string insertSql = @"
-            INSERT INTO resumes (id, fileName, filePath, content, emailSubject, emailSender, email, phone, emailDate, source, createdAt, processedAt, status)
-            VALUES (@id, @fileName, @filePath, @content, @emailSubject, @emailSender, @email, @phone, @emailDate, @source, @createdAt, @processedAt, @status)";
+            INSERT INTO resumes (id, fileName, filePath, content, emailSubject, emailSender, email, phone, name, emailDate, source, createdAt, processedAt, status)
+            VALUES (@id, @fileName, @filePath, @content, @emailSubject, @emailSender, @email, @phone, @name, @emailDate, @source, @createdAt, @processedAt, @status)";
 
         int count = 0;
         foreach (var resume in sampleResumes)
@@ -315,6 +373,9 @@ Experience: Web development, database design, frontend integration",
             // Extract phone number from content
             var extractedPhone = ExtractPhoneFromContent(resume.Content);
             
+            // Extract name from content
+            var extractedName = ExtractNameFromContent(resume.Content);
+            
             using var insertCommand = new SQLiteCommand(insertSql, connection);
             insertCommand.Parameters.AddWithValue("@id", resume.Id);
             insertCommand.Parameters.AddWithValue("@fileName", resume.FileName);
@@ -324,6 +385,7 @@ Experience: Web development, database design, frontend integration",
             insertCommand.Parameters.AddWithValue("@emailSender", resume.EmailSender);
             insertCommand.Parameters.AddWithValue("@email", extractedEmail ?? (object)DBNull.Value);
             insertCommand.Parameters.AddWithValue("@phone", extractedPhone ?? (object)DBNull.Value);
+            insertCommand.Parameters.AddWithValue("@name", extractedName ?? (object)DBNull.Value);
             insertCommand.Parameters.AddWithValue("@emailDate", resume.EmailDate.ToString("yyyy-MM-dd HH:mm:ss"));
             insertCommand.Parameters.AddWithValue("@source", resume.Source);
             insertCommand.Parameters.AddWithValue("@createdAt", DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"));
@@ -332,7 +394,7 @@ Experience: Web development, database design, frontend integration",
 
             insertCommand.ExecuteNonQuery();
             count++;
-            Console.WriteLine($"Inserted resume {count}: {resume.FileName} (Email: {extractedEmail ?? "Not found"}, Phone: {extractedPhone ?? "Not found"})");
+            Console.WriteLine($"Inserted resume {count}: {resume.FileName} (Email: {extractedEmail ?? "Not found"}, Phone: {extractedPhone ?? "Not found"}, Name: {extractedName ?? "Not found"})");
         }
 
         // Verify the data
@@ -342,13 +404,14 @@ Experience: Web development, database design, frontend integration",
 
         // Show sample data with extracted emails
         Console.WriteLine("\nSample data with extracted emails:");
-        using var selectCommand = new SQLiteCommand("SELECT id, fileName, emailSender, email, phone, source FROM resumes LIMIT 5", connection);
+        using var selectCommand = new SQLiteCommand("SELECT id, fileName, emailSender, email, phone, name, source FROM resumes LIMIT 5", connection);
         using var reader = selectCommand.ExecuteReader();
         while (reader.Read())
         {
             var extractedEmail = reader["email"]?.ToString() ?? "Not found";
             var extractedPhone = reader["phone"]?.ToString() ?? "Not found";
-            Console.WriteLine($"ID: {reader["id"]}, File: {reader["fileName"]}, Sender: {reader["emailSender"]}, Extracted Email: {extractedEmail}, Extracted Phone: {extractedPhone}, Source: {reader["source"]}");
+            var extractedName = reader["name"]?.ToString() ?? "Not found";
+            Console.WriteLine($"ID: {reader["id"]}, File: {reader["fileName"]}, Sender: {reader["emailSender"]}, Extracted Email: {extractedEmail}, Extracted Phone: {extractedPhone}, Extracted Name: {extractedName}, Source: {reader["source"]}");
         }
 
         connection.Close();

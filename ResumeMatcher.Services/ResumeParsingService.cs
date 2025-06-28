@@ -67,6 +67,23 @@ namespace ResumeMatcher.Services
                 swExtract.Stop();
                 Console.WriteLine($"[RankResumeAsync] Text extraction took: {swExtract.ElapsedMilliseconds} ms");
 
+                // Extract name and phone from the content
+                var extractedName = _dotNetParser.ExtractName(extractedText);
+                var extractedPhone = _dotNetParser.ExtractPhoneNumber(extractedText);
+                
+                // Update resume with extracted information
+                if (!string.IsNullOrEmpty(extractedName))
+                {
+                    resume.Name = extractedName;
+                    Console.WriteLine($"[RankResumeAsync] Extracted name: {extractedName} for {resume.FileName}");
+                }
+                
+                if (!string.IsNullOrEmpty(extractedPhone))
+                {
+                    resume.Phone = extractedPhone;
+                    Console.WriteLine($"[RankResumeAsync] Extracted phone: {extractedPhone} for {resume.FileName}");
+                }
+
                 var swKeywords = Stopwatch.StartNew();
                 var keywordMatches = _dotNetParser.CalculateKeywordMatches(extractedText, keywords);
                 swKeywords.Stop();

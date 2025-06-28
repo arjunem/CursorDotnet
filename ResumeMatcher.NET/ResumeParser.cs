@@ -218,6 +218,106 @@ namespace ResumeMatcher.NET
             return null;
         }
 
+        public string? ExtractName(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return null;
+
+            Console.WriteLine($"[ResumeParser] Extracting name from text (first 200 chars): {text.Substring(0, Math.Min(200, text.Length))}...");
+
+            // Split text into lines and look for name patterns
+            var lines = text.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            
+            Console.WriteLine($"[ResumeParser] Checking first {Math.Min(10, lines.Length)} lines for name patterns");
+            
+            foreach (var line in lines.Take(10)) // Check first 10 lines
+            {
+                var trimmedLine = line.Trim();
+                if (string.IsNullOrEmpty(trimmedLine)) continue;
+
+                Console.WriteLine($"[ResumeParser] Checking line: '{trimmedLine}'");
+
+                // Pattern 1: Full name at the beginning of resume (usually first line)
+                // Matches: "John Doe", "John A. Doe", "John A Doe", "JOHN DOE"
+                var namePattern = @"^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)$";
+                var match = Regex.Match(trimmedLine, namePattern);
+                if (match.Success)
+                {
+                    var name = match.Groups[1].Value.Trim();
+                    if (name.Split(' ').Length >= 2 && name.Split(' ').Length <= 4)
+                    {
+                        Console.WriteLine($"[ResumeParser] Found name (Pattern 1): {name}");
+                        return name;
+                    }
+                }
+
+                // Pattern 2: Name with title (Mr., Ms., Dr., etc.)
+                var nameWithTitlePattern = @"^(Mr\.|Ms\.|Mrs\.|Dr\.|Prof\.)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)$";
+                match = Regex.Match(trimmedLine, nameWithTitlePattern, RegexOptions.IgnoreCase);
+                if (match.Success)
+                {
+                    var name = match.Groups[2].Value.Trim();
+                    if (name.Split(' ').Length >= 2 && name.Split(' ').Length <= 4)
+                    {
+                        Console.WriteLine($"[ResumeParser] Found name (Pattern 2): {name}");
+                        return name;
+                    }
+                }
+
+                // Pattern 3: Name in ALL CAPS (common in resumes)
+                var allCapsPattern = @"^([A-Z]+(?:\s+[A-Z]+)*)$";
+                match = Regex.Match(trimmedLine, allCapsPattern);
+                if (match.Success)
+                {
+                    var name = match.Groups[1].Value.Trim();
+                    if (name.Split(' ').Length >= 2 && name.Split(' ').Length <= 4)
+                    {
+                        // Convert to proper case
+                        var properName = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(name.ToLower());
+                        Console.WriteLine($"[ResumeParser] Found name (Pattern 3): {properName}");
+                        return properName;
+                    }
+                }
+
+                // Pattern 4: More flexible name pattern - allows for single names or names with middle initials
+                var flexibleNamePattern = @"^([A-Z][a-z]+(?:\s+[A-Z]?[a-z]*)*)$";
+                match = Regex.Match(trimmedLine, flexibleNamePattern);
+                if (match.Success)
+                {
+                    var name = match.Groups[1].Value.Trim();
+                    var words = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                    if (words.Length >= 1 && words.Length <= 4)
+                    {
+                        // Check if it looks like a name (not a job title, company, etc.)
+                        var commonJobWords = new[] { "engineer", "developer", "manager", "director", "president", "ceo", "cto", "consultant", "analyst", "specialist", "coordinator", "assistant", "associate", "senior", "junior", "lead", "principal", "architect", "designer", "programmer", "coder" };
+                        var isLikelyName = !commonJobWords.Any(word => name.ToLower().Contains(word));
+                        
+                        if (isLikelyName)
+                        {
+                            Console.WriteLine($"[ResumeParser] Found name (Pattern 4): {name}");
+                            return name;
+                        }
+                    }
+                }
+
+                // Pattern 5: Name followed by common resume headers
+                var nameWithHeaderPattern = @"^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s*(?:resume|cv|curriculum vitae|profile|contact|email|phone|address|summary|objective|experience|education|skills)$";
+                match = Regex.Match(trimmedLine, nameWithHeaderPattern, RegexOptions.IgnoreCase);
+                if (match.Success)
+                {
+                    var name = match.Groups[1].Value.Trim();
+                    if (name.Split(' ').Length >= 2 && name.Split(' ').Length <= 4)
+                    {
+                        Console.WriteLine($"[ResumeParser] Found name (Pattern 5): {name}");
+                        return name;
+                    }
+                }
+            }
+
+            Console.WriteLine($"[ResumeParser] No name found in the first 10 lines");
+            return null;
+        }
+
         // Add more methods as needed for experience, education, and ranking
 
         private static readonly HashSet<string> StopWords = new HashSet<string>(new[]

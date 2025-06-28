@@ -363,4 +363,7 @@ FodyWeavers.xsd
 # Sensitive configuration files
 PythonScripts/email_config.json
 *.env
-appsettings.Production.json 
+appsettings.Production.json
+
+# Ignore notification payload files
+notification_payload_*.txt 

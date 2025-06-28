@@ -15,6 +15,7 @@ Console.WriteLine($"[Program] UseDotNetLogic configuration value: {useDotNet}");
 builder.Services.AddScoped<IResumeSourcingService>(_ => new ResumeSourcingService(useDotNet, builder.Configuration));
 builder.Services.AddScoped<IResumeParsingService>(_ => new ResumeParsingService(useDotNet));
 builder.Services.AddScoped<IResumeMatchingService, ResumeMatchingService>();
+builder.Services.AddScoped<IExternalNotificationService, ExternalNotificationService>();
 
 var app = builder.Build();
 

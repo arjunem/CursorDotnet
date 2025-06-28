@@ -37,6 +37,7 @@ namespace ResumeMatcher.Core.Models
         public string? EmailSender { get; set; }
         public string? Email { get; set; }
         public string? Phone { get; set; }
+        public string? Name { get; set; }
         public DateTime? EmailDate { get; set; }
         public string Source { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
@@ -68,6 +69,8 @@ namespace ResumeMatcher.Core.Models
         public List<ResumeRankingSummary> Rankings { get; set; } = new List<ResumeRankingSummary>();
         
         public string JobDescription { get; set; } = string.Empty;
+        
+        public string? JobTitle { get; set; }
         
         public List<string> ExtractedKeywords { get; set; } = new List<string>();
         

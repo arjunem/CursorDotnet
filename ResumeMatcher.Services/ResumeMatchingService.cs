@@ -7,11 +7,16 @@ namespace ResumeMatcher.Services
     {
         private readonly IResumeSourcingService _sourcingService;
         private readonly IResumeParsingService _parsingService;
+        private readonly IExternalNotificationService _notificationService;
 
-        public ResumeMatchingService(IResumeSourcingService sourcingService, IResumeParsingService parsingService)
+        public ResumeMatchingService(
+            IResumeSourcingService sourcingService, 
+            IResumeParsingService parsingService,
+            IExternalNotificationService notificationService)
         {
             _sourcingService = sourcingService;
             _parsingService = parsingService;
+            _notificationService = notificationService;
         }
 
         public async Task<ResumeMatchingResponse> MatchResumesAsync(ResumeMatchingRequest request)
@@ -32,6 +37,7 @@ namespace ResumeMatcher.Services
                     EmailSender = r.Resume.EmailSender,
                     Email = r.Resume.Email,
                     Phone = r.Resume.Phone,
+                    Name = r.Resume.Name,
                     EmailDate = r.Resume.EmailDate,
                     Source = r.Resume.Source,
                     CreatedAt = r.Resume.CreatedAt,
@@ -51,13 +57,30 @@ namespace ResumeMatcher.Services
                 summaryRankings = summaryRankings.Where(r => r.Score > 0).ToList();
             }
             
-            return new ResumeMatchingResponse
+            var response = new ResumeMatchingResponse
             {
                 Rankings = summaryRankings,
                 TotalResumesProcessed = resumes.Count,
                 JobDescription = request.JobDescription,
+                JobTitle = request.JobTitle,
                 ExtractedKeywords = await _parsingService.ExtractKeywordsFromJobDescriptionAsync(request.JobDescription)
             };
+
+            // Fire and forget notification with top 2 resumes
+            var topResumes = summaryRankings.Take(2).Select(r => r.Resume).ToList();
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await _notificationService.SendResumeNotificationAsync(topResumes, request.JobDescription, request.JobTitle);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[ResumeMatchingService] Error in notification task: {ex.Message}");
+                }
+            });
+
+            return response;
         }
 
         public async Task<List<Resume>> GetAvailableResumesAsync()
@@ -65,13 +88,23 @@ namespace ResumeMatcher.Services
             return await _sourcingService.GetAllResumesAsync(new ResumeMatchingRequest());
         }
 
-        public async Task<ResumeRanking> GetResumeRankingAsync(string resumeId, string jobDescription)
+        public async Task<ResumeRanking> GetResumeRankingAsync(string resumeId, string jobDescription, bool useOllama = false)
         {
             var resumes = await _sourcingService.GetAllResumesAsync(new ResumeMatchingRequest());
             var resume = resumes.FirstOrDefault(r => r.Id == resumeId);
             if (resume == null) return new ResumeRanking();
+            
             var keywords = await _parsingService.ExtractKeywordsFromJobDescriptionAsync(jobDescription);
-            return await _parsingService.RankResumeAsync(resume, jobDescription, keywords);
+            
+            if (useOllama)
+            {
+                // Note: This would need the Ollama service to be implemented
+                return await _parsingService.RankResumeAsync(resume, jobDescription, keywords);
+            }
+            else
+            {
+                return await _parsingService.RankResumeAsync(resume, jobDescription, keywords);
+            }
         }
     }
 } 
