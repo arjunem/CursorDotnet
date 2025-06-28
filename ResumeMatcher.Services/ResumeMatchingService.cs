@@ -63,6 +63,7 @@ namespace ResumeMatcher.Services
                 TotalResumesProcessed = resumes.Count,
                 JobDescription = request.JobDescription,
                 JobTitle = request.JobTitle,
+                PromptId = request.PromptId,
                 ExtractedKeywords = await _parsingService.ExtractKeywordsFromJobDescriptionAsync(request.JobDescription)
             };
 
@@ -74,7 +75,7 @@ namespace ResumeMatcher.Services
                 {
                     try
                     {
-                        await _notificationService.SendResumeNotificationAsync(topResumes, request.JobDescription, request.JobTitle);
+                        await _notificationService.SendResumeNotificationAsync(topResumes, request.JobDescription, request.JobTitle, request.PromptId);
                     }
                     catch (Exception ex)
                     {

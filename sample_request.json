@@ -2,6 +2,7 @@
   "jobDescription": "Senior Software Engineer with experience in C#, .NET, and web development",
   "jobTitle": "Senior Software Engineer",
   "company": "TechCorp Solutions",
+  "promptId": "prompt_001",
   "requiredSkills": [
     ".NET",
     "C#",
@@ -10,7 +11,15 @@
     "Azure",
     "JavaScript",
     "React",
-    "Git"
+    "Git",
+    "Docker",
+    "Kubernetes",
+    "Microservices",
+    "REST APIs",
+    "TypeScript",
+    "Angular",
+    "AWS",
+    "CI/CD"
   ],
   "preferredSkills": [
     "Docker",

@@ -4,6 +4,6 @@ namespace ResumeMatcher.Core.Interfaces
 {
     public interface IExternalNotificationService
     {
-        Task SendResumeNotificationAsync(List<ResumeSummary> topResumes, string jobDescription, string? jobTitle = null);
+        Task SendResumeNotificationAsync(List<ResumeSummary> topResumes, string jobDescription, string? jobTitle = null, string? promptId = null);
     }
 } 

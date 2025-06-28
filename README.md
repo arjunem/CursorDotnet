@@ -63,6 +63,7 @@ Match resumes against a job description.
   "jobDescription": "Senior Software Engineer with 5+ years of experience in .NET, C#, and web development. Must have experience with ASP.NET Core, SQL Server, and cloud technologies.",
   "jobTitle": "Senior Software Engineer",
   "company": "Tech Corp",
+  "promptId": "prompt_001",
   "requiredSkills": [".NET", "C#", "ASP.NET Core"],
   "preferredSkills": ["Azure", "React", "TypeScript"],
   "maxResults": 10,
@@ -105,6 +106,8 @@ Match resumes against a job description.
     }
   ],
   "jobDescription": "Senior Software Engineer...",
+  "jobTitle": "Senior Software Engineer",
+  "promptId": "prompt_001",
   "extractedKeywords": [".NET", "C#", "ASP.NET Core", "SQL Server"],
   "emailResumesCount": 10,
   "databaseResumesCount": 13,
@@ -230,4 +233,4 @@ docker-compose down
 
 ## License
 
-This project is licensed under the MIT License. 
+This project is licensed under the MIT License.

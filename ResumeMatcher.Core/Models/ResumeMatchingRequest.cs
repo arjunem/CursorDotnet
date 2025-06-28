@@ -12,6 +12,8 @@ namespace ResumeMatcher.Core.Models
         
         public string? Company { get; set; }
         
+        public string? PromptId { get; set; }
+        
         public List<string>? RequiredSkills { get; set; }
         
         public List<string>? PreferredSkills { get; set; }
@@ -73,6 +75,8 @@ namespace ResumeMatcher.Core.Models
         public string JobDescription { get; set; } = string.Empty;
         
         public string? JobTitle { get; set; }
+        
+        public string? PromptId { get; set; }
         
         public List<string> ExtractedKeywords { get; set; } = new List<string>();
         

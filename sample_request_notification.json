@@ -1,6 +1,7 @@
 {
   "jobDescription": "Senior Software Engineer with experience in C#, .NET, and web development",
   "jobTitle": "Senior Software Engineer",
+  "promptId": "notification_prompt_001",
   "excludeUnmatched": false,
   "fetchUnreadEmailsOnly": false
 } 

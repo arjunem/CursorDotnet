@@ -2,6 +2,7 @@
   "jobDescription": "We are looking for a Senior Software Engineer with expertise in .NET development, C#, ASP.NET Core, and cloud technologies. The ideal candidate should have 5+ years of experience in building scalable web applications, experience with SQL Server, and knowledge of microservices architecture. Experience with Azure, Docker, and CI/CD pipelines is preferred.",
   "jobTitle": "Senior Software Engineer",
   "company": "TechCorp Inc.",
+  "promptId": "unread_emails_prompt_001",
   "requiredSkills": [
     ".NET",
     "C#",

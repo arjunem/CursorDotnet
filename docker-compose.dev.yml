@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  resume-matcher-api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - DOTNET_USE_POLLING_FILE_WATCHER=1
+      - ASPNETCORE_Kestrel__Limits__MaxRequestBodySize=52428800  # 50MB
+    ports:
+      - "8080:80"   # Development port
+      - "8081:80"   # Alternative port for testing
+    volumes:
+      # Additional development volumes
+      - ./logs:/app/logs
+      - ./appsettings.Development.json:/app/appsettings.Development.json:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/api/status/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.25' 

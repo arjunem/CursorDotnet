@@ -20,7 +20,7 @@ namespace ResumeMatcher.Services
             _notificationUrl = configuration["ExternalNotification:Url"] ?? "https://api.example.com/notify";
         }
 
-        public async Task SendResumeNotificationAsync(List<ResumeSummary> topResumes, string jobDescription, string? jobTitle = null)
+        public async Task SendResumeNotificationAsync(List<ResumeSummary> topResumes, string jobDescription, string? jobTitle = null, string? promptId = null)
         {
             try
             {
@@ -36,6 +36,7 @@ namespace ResumeMatcher.Services
                 // Create the notification payload with hardcoded email and phone
                 var notificationPayload = new
                 {
+                    promptId = promptId,
                     jobDescription = jobDescription,
                     jobTitle = jobTitle,
                     resumes = top2Resumes.Select((r, i) => new
