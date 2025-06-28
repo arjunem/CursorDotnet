@@ -46,26 +46,19 @@ namespace ResumeMatcher.Services
             return ParseJsonSafely<List<string>>(output) ?? new List<string>();
         }
 
-        public async Task<ResumeRanking> RankResumeAsync(Resume resume, string jobDescription, List<string> keywords)
+        public async Task<ResumeRanking> RankResumeAsync(Resume resume, string jobDescription, List<string> requiredSkills, List<string> preferredSkills)
         {
             var swTotal = Stopwatch.StartNew();
+            Console.WriteLine($"[RankResumeAsync] Ranking resume: {resume.FileName}");
+            
             if (_useDotNet)
             {
-                Console.WriteLine($"[RankResumeAsync] Start ranking for: {resume.FileName}");
-                var swExtract = Stopwatch.StartNew();
-                string extractedText = string.Empty;
-                if (!string.IsNullOrWhiteSpace(resume.Content))
+                var extractedText = await ExtractTextFromResumeAsync(resume);
+                if (string.IsNullOrEmpty(extractedText))
                 {
-                    extractedText = resume.Content;
-                    Console.WriteLine($"[RankResumeAsync] Used stored resume.Content for {resume.FileName}");
+                    Console.WriteLine($"[RankResumeAsync] No text extracted from {resume.FileName}");
+                    return new ResumeRanking { Resume = resume, Score = 0 };
                 }
-                else
-                {
-                    extractedText = await ExtractTextFromResumeAsync(resume);
-                    Console.WriteLine($"[RankResumeAsync] Extracted text from file for {resume.FileName}");
-                }
-                swExtract.Stop();
-                Console.WriteLine($"[RankResumeAsync] Text extraction took: {swExtract.ElapsedMilliseconds} ms");
 
                 // Extract name and phone from the content
                 var extractedName = _dotNetParser.ExtractName(extractedText);
@@ -85,14 +78,34 @@ namespace ResumeMatcher.Services
                 }
 
                 var swKeywords = Stopwatch.StartNew();
-                var keywordMatches = _dotNetParser.CalculateKeywordMatches(extractedText, keywords);
+                
+                // Calculate matches for required skills (higher weight)
+                var requiredMatches = _dotNetParser.CalculateKeywordMatches(extractedText, requiredSkills);
+                foreach (var match in requiredMatches)
+                {
+                    match.Weight = 0.3; // Higher weight for required skills
+                }
+                
+                // Calculate matches for preferred skills (lower weight)
+                var preferredMatches = _dotNetParser.CalculateKeywordMatches(extractedText, preferredSkills);
+                foreach (var match in preferredMatches)
+                {
+                    match.Weight = 0.1; // Lower weight for preferred skills
+                }
+                
+                // Combine all matches
+                var allMatches = new List<KeywordMatch>();
+                allMatches.AddRange(requiredMatches);
+                allMatches.AddRange(preferredMatches);
+                
                 swKeywords.Stop();
                 Console.WriteLine($"[RankResumeAsync] Keyword matching took: {swKeywords.ElapsedMilliseconds} ms");
+                Console.WriteLine($"[RankResumeAsync] Required skills matched: {requiredMatches.Count}, Preferred skills matched: {preferredMatches.Count}");
 
-                var score = keywordMatches.Sum(km => km.Weight);
+                var score = allMatches.Sum(km => km.Weight);
                 Console.WriteLine($"[RankResumeAsync] Calculated score: {score}");
 
-                var summary = GenerateSummary(extractedText, keywordMatches, score);
+                var summary = GenerateSummary(extractedText, allMatches, score, requiredSkills, preferredSkills);
 
                 swTotal.Stop();
                 Console.WriteLine($"[RankResumeAsync] Total time for {resume.FileName}: {swTotal.ElapsedMilliseconds} ms");
@@ -101,7 +114,7 @@ namespace ResumeMatcher.Services
                 {
                     Resume = resume,
                     Score = score,
-                    KeywordMatches = keywordMatches,
+                    KeywordMatches = allMatches,
                     Summary = summary,
                     ResumeSource = resume.Source ?? "Unknown"
                 };
@@ -112,7 +125,7 @@ namespace ResumeMatcher.Services
             return ParseJsonSafely<ResumeRanking>(output) ?? new ResumeRanking { Resume = resume };
         }
 
-        private string GenerateSummary(string text, List<KeywordMatch> keywordMatches, double score)
+        private string GenerateSummary(string text, List<KeywordMatch> keywordMatches, double score, List<string> requiredSkills, List<string> preferredSkills)
         {
             if (string.IsNullOrEmpty(text))
                 return "No content available for summary.";
@@ -122,8 +135,21 @@ namespace ResumeMatcher.Services
             if (!matchedKeywords.Any())
                 return "No relevant skills or experience found.";
 
+            var requiredMatches = matchedKeywords.Where(k => requiredSkills.Contains(k)).ToList();
+            var preferredMatches = matchedKeywords.Where(k => preferredSkills.Contains(k)).ToList();
+            
             var summary = $"Candidate shows proficiency in: {string.Join(", ", matchedKeywords)}. ";
-            summary += $"Overall match score: {score:F2}.";
+            summary += $"Overall match score: {score:F2}. ";
+            
+            if (requiredMatches.Any())
+            {
+                summary += $"Required skills matched: {string.Join(", ", requiredMatches)}. ";
+            }
+            
+            if (preferredMatches.Any())
+            {
+                summary += $"Preferred skills matched: {string.Join(", ", preferredMatches)}. ";
+            }
 
             return summary;
         }
@@ -137,11 +163,12 @@ namespace ResumeMatcher.Services
             {
                 Console.WriteLine($"[RankResumesAsync] Using .NET logic for ranking");
                 var rankings = new List<ResumeRanking>();
-                var keywords = new List<string>();
-                if (request.RequiredSkills != null) keywords.AddRange(request.RequiredSkills);
-                if (request.PreferredSkills != null) keywords.AddRange(request.PreferredSkills);
                 
-                Console.WriteLine($"[RankResumesAsync] Using {keywords.Count} keywords for matching");
+                // Separate required and preferred skills for different weighting
+                var requiredSkills = request.RequiredSkills ?? new List<string>();
+                var preferredSkills = request.PreferredSkills ?? new List<string>();
+                
+                Console.WriteLine($"[RankResumesAsync] Using {requiredSkills.Count} required skills and {preferredSkills.Count} preferred skills");
                 
                 var swProcessing = Stopwatch.StartNew();
                 var processedCount = 0;
@@ -149,7 +176,7 @@ namespace ResumeMatcher.Services
                 foreach (var resume in resumes)
                 {
                     var swResume = Stopwatch.StartNew();
-                    var ranking = await RankResumeAsync(resume, request.JobDescription, keywords);
+                    var ranking = await RankResumeAsync(resume, request.JobDescription, requiredSkills, preferredSkills);
                     rankings.Add(ranking);
                     swResume.Stop();
                     processedCount++;

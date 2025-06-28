@@ -68,17 +68,24 @@ namespace ResumeMatcher.Services
 
             // Fire and forget notification with top 2 resumes
             var topResumes = summaryRankings.Take(2).Select(r => r.Resume).ToList();
-            _ = Task.Run(async () =>
+            if (request.EnableExternalNotification)
             {
-                try
+                _ = Task.Run(async () =>
                 {
-                    await _notificationService.SendResumeNotificationAsync(topResumes, request.JobDescription, request.JobTitle);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"[ResumeMatchingService] Error in notification task: {ex.Message}");
-                }
-            });
+                    try
+                    {
+                        await _notificationService.SendResumeNotificationAsync(topResumes, request.JobDescription, request.JobTitle);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[ResumeMatchingService] Error in notification task: {ex.Message}");
+                    }
+                });
+            }
+            else
+            {
+                Console.WriteLine("[ResumeMatchingService] External notification is disabled by request payload.");
+            }
 
             return response;
         }
@@ -99,11 +106,11 @@ namespace ResumeMatcher.Services
             if (useOllama)
             {
                 // Note: This would need the Ollama service to be implemented
-                return await _parsingService.RankResumeAsync(resume, jobDescription, keywords);
+                return await _parsingService.RankResumeAsync(resume, jobDescription, keywords, new List<string>());
             }
             else
             {
-                return await _parsingService.RankResumeAsync(resume, jobDescription, keywords);
+                return await _parsingService.RankResumeAsync(resume, jobDescription, keywords, new List<string>());
             }
         }
     }

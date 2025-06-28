@@ -25,6 +25,8 @@ namespace ResumeMatcher.Core.Models
         public bool ExcludeUnmatched { get; set; } = false;
         
         public bool FetchUnreadEmailsOnly { get; set; } = false;
+        
+        public bool EnableExternalNotification { get; set; } = true;
     }
     
     public class ResumeSummary
