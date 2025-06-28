@@ -22,7 +22,8 @@ namespace ResumeMatcher.Services
             _configuration = configuration;
             Console.WriteLine($"[ResumeSourcingService] Constructor called with useDotNet: {useDotNet}");
             var currentDir = Directory.GetCurrentDirectory();
-            var solutionRoot = Path.GetFullPath(Path.Combine(currentDir, ".."));
+            // Use current directory for Docker, or go up one level for local development
+            var solutionRoot = currentDir.Contains("/app") ? currentDir : Path.GetFullPath(Path.Combine(currentDir, ".."));
             _scriptsDir = Path.Combine(solutionRoot, "PythonScripts");
             var dbPath = Path.Combine(solutionRoot, "resumes.db");
             _dbSource = new DatabaseResumeSource(dbPath);
@@ -42,6 +43,8 @@ namespace ResumeMatcher.Services
             
             Console.WriteLine($"[ResumeSourcingService] Current directory: {currentDir}");
             Console.WriteLine($"[ResumeSourcingService] Solution root: {solutionRoot}");
+            Console.WriteLine($"[ResumeSourcingService] Database path: {dbPath}");
+            Console.WriteLine($"[ResumeSourcingService] Database exists: {File.Exists(dbPath)}");
             Console.WriteLine($"[ResumeSourcingService] Scripts directory: {_scriptsDir}");
             Console.WriteLine($"[ResumeSourcingService] Scripts directory exists: {Directory.Exists(_scriptsDir)}");
         }

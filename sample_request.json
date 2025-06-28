@@ -24,5 +24,6 @@
   ],
   "maxResults": 10,
   "includeEmailResumes": true,
-  "includeDatabaseResumes": true
+  "includeDatabaseResumes": true,
+  "excludeUnmatched": false
 } 

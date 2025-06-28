@@ -44,6 +44,12 @@ namespace ResumeMatcher.Services
                 ResumeSource = r.ResumeSource
             }).ToList();
             
+            // Filter out unmatched resumes (score = 0) if excludeUnmatched is true
+            if (request.ExcludeUnmatched)
+            {
+                summaryRankings = summaryRankings.Where(r => r.Score > 0).ToList();
+            }
+            
             return new ResumeMatchingResponse
             {
                 Rankings = summaryRankings,

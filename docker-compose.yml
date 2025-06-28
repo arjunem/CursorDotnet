@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  resume-matcher-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: resume-matcher-api
+    ports:
+      - "8080:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:80
+    volumes:
+      # Mount the database file for persistence
+      - ./resumes.db:/app/resumes.db
+      # Mount temp directory for email attachments
+      - ./temp_resumes:/app/temp_resumes
+      # Mount Python scripts directory
+      - ./PythonScripts:/app/PythonScripts
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Add a database service if you want to use a separate database
+  # sqlite-db:
+  #   image: alpine:latest
+  #   container_name: resume-matcher-db
+  #   volumes:
+  #     - ./resumes.db:/data/resumes.db
+  #   command: ["sh", "-c", "cp /data/resumes.db /app/resumes.db && tail -f /dev/null"] 

@@ -1,4 +1,5 @@
 {
   "jobDescription": "Senior Software Engineer with 5+ years of experience in .NET, C#, and web development. Must have experience with ASP.NET Core, SQL Server, and cloud technologies.",
-  "requiredSkills": [".NET", "C#", "ASP.NET Core", "SQL Server", "Azure", "JavaScript", "React", "Git"]
+  "requiredSkills": [".NET", "C#", "ASP.NET Core", "SQL Server", "Azure", "JavaScript", "React", "Git"],
+  "excludeUnmatched": false
 } 

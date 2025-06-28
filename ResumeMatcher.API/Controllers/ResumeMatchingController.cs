@@ -5,7 +5,7 @@ using ResumeMatcher.Core.Models;
 namespace ResumeMatcher.API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/resumes")]
     public class ResumeMatchingController : ControllerBase
     {
         private readonly IResumeMatchingService _resumeMatchingService;
@@ -15,7 +15,7 @@ namespace ResumeMatcher.API.Controllers
             _resumeMatchingService = resumeMatchingService;
         }
 
-        [HttpPost]
+        [HttpPost("fetch")]
         public async Task<ActionResult<ResumeMatchingResponse>> MatchResumes([FromBody] ResumeMatchingRequest request)
         {
             var result = await _resumeMatchingService.MatchResumesAsync(request);
