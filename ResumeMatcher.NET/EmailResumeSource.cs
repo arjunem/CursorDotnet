@@ -59,9 +59,9 @@ namespace ResumeMatcher.NET
             return _resumeParser.ExtractPhoneNumber(content);
         }
 
-        public async Task<List<Resume>> FetchResumesFromEmailAsync(string subjectFilter = "resume", List<string> attachmentExtensions = null, int maxEmails = 50)
+        public async Task<List<Resume>> FetchResumesFromEmailAsync(string subjectFilter = "resume", List<string> attachmentExtensions = null, int maxEmails = 50, bool unreadOnly = false)
         {
-            var cacheKey = $"email_{subjectFilter}_{DateTime.UtcNow:yyyyMMdd_HH}";
+            var cacheKey = $"email_{subjectFilter}_{unreadOnly}_{DateTime.UtcNow:yyyyMMdd_HH}";
             
             // Check cache first
             if (_lastFetchCache.TryGetValue(cacheKey, out var lastFetch) && 
@@ -71,7 +71,7 @@ namespace ResumeMatcher.NET
                 return new List<Resume>(); // Return empty list for cached results
             }
 
-            Console.WriteLine($"[EmailResumeSource] Starting email fetch at {DateTime.UtcNow}");
+            Console.WriteLine($"[EmailResumeSource] Starting email fetch at {DateTime.UtcNow} (Unread only: {unreadOnly})");
             var totalStartTime = DateTime.UtcNow;
             
             var resumes = new List<Resume>();
@@ -107,8 +107,16 @@ namespace ResumeMatcher.NET
                 
                 // Phase 4: Search for emails
                 var searchStart = DateTime.UtcNow;
-                Console.WriteLine($"[EmailResumeSource] Phase 4: Searching for emails with subject containing '{subjectFilter}'");
-                var query = SearchQuery.SubjectContains(subjectFilter);
+                Console.WriteLine($"[EmailResumeSource] Phase 4: Searching for emails with subject containing '{subjectFilter}' (Unread only: {unreadOnly})");
+                
+                // Build search query
+                SearchQuery query = SearchQuery.SubjectContains(subjectFilter);
+                if (unreadOnly)
+                {
+                    query = SearchQuery.And(query, SearchQuery.NotSeen);
+                    Console.WriteLine($"[EmailResumeSource] Added unread filter to search query");
+                }
+                
                 var uids = await inbox.SearchAsync(query);
                 var searchTime = DateTime.UtcNow - searchStart;
                 Console.WriteLine($"[EmailResumeSource] Search took: {searchTime.TotalMilliseconds:F0} ms");

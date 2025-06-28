@@ -49,10 +49,10 @@ namespace ResumeMatcher.Services
             Console.WriteLine($"[ResumeSourcingService] Scripts directory exists: {Directory.Exists(_scriptsDir)}");
         }
 
-        public async Task<List<Resume>> GetResumesFromEmailAsync(string subjectFilter = "resume", List<string> attachmentExtensions = null, int maxEmails = 50)
+        public async Task<List<Resume>> GetResumesFromEmailAsync(string subjectFilter = "resume", List<string> attachmentExtensions = null, int maxEmails = 50, bool unreadOnly = false)
         {
             if (_useDotNet)
-                return await _emailSource.FetchResumesFromEmailAsync(subjectFilter, attachmentExtensions, maxEmails);
+                return await _emailSource.FetchResumesFromEmailAsync(subjectFilter, attachmentExtensions, maxEmails, unreadOnly);
             var args = $"email_source.py";
             var output = await RunPythonScriptAsync(args);
             return ParseResumesFromJson(output);
@@ -75,10 +75,10 @@ namespace ResumeMatcher.Services
             {
                 try
                 {
-                    Console.WriteLine("[ResumeSourcingService] Attempting to fetch resumes from email...");
+                    Console.WriteLine($"[ResumeSourcingService] Attempting to fetch resumes from email... (Unread only: {request.FetchUnreadEmailsOnly})");
                     var maxEmails = _configuration.GetSection("Email").GetValue<int>("MaxEmails", 50);
                     Console.WriteLine($"[ResumeSourcingService] Using max emails limit: {maxEmails}");
-                    var emailResumes = await GetResumesFromEmailAsync(maxEmails: maxEmails);
+                    var emailResumes = await GetResumesFromEmailAsync(maxEmails: maxEmails, unreadOnly: request.FetchUnreadEmailsOnly);
                     resumes.AddRange(emailResumes);
                     Console.WriteLine($"[ResumeSourcingService] Successfully fetched {emailResumes.Count} resumes from email");
                 }

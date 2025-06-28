@@ -23,6 +23,8 @@ namespace ResumeMatcher.Core.Models
         public bool IncludeDatabaseResumes { get; set; } = true;
         
         public bool ExcludeUnmatched { get; set; } = false;
+        
+        public bool FetchUnreadEmailsOnly { get; set; } = false;
     }
     
     public class ResumeSummary
