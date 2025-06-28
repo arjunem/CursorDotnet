@@ -22,9 +22,9 @@ namespace ResumeMatcher.Core.Models
         
         public bool IncludeDatabaseResumes { get; set; } = true;
         
-        public bool ExcludeUnmatched { get; set; } = false;
+        public bool ExcludeUnmatched { get; set; } = true;
         
-        public bool FetchUnreadEmailsOnly { get; set; } = false;
+        public bool FetchUnreadEmailsOnly { get; set; } = true;
         
         public bool EnableExternalNotification { get; set; } = true;
     }
